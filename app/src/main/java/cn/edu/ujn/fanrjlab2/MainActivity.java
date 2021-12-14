@@ -3,26 +3,38 @@ package cn.edu.ujn.fanrjlab2;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
 
+import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Canvas;
+import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.os.Parcelable;
+import android.util.AttributeSet;
 import android.util.Log;
+import android.view.MotionEvent;
+import android.view.View;
 import android.widget.Button;
+import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.logging.Level;
 
 public class MainActivity extends AppCompatActivity {
-    private TextView tv1;
+    private TextView tv1, battery;
     private Button b1, b2;
     NotificationManager nm;
-    
+    SeekBar seekBar;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -31,16 +43,31 @@ public class MainActivity extends AppCompatActivity {
         b1 = findViewById(R.id.start);
         b2 = findViewById(R.id.stop);
         nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        battery = findViewById(R.id.battery);
+        seekBar = findViewById(R.id.seekBar);
+        seekBar.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                return true;
+            }
+        });
+
+        // TODO: 2021/12/14 注册进度广播接收器
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("progress");
+        registerReceiver(new ProgressReceiver(), filter);
 
         // TODO: 2021/11/11 注册Receiver
         IntentFilter intentFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         BatteryReceiver batteryReceiver = new BatteryReceiver();
         registerReceiver(batteryReceiver, intentFilter);
 
+        // TODO: 2021/12/14 注册service
+        Intent intentService = new Intent(this, UjnMusicService.class);
+
         // TODO: 2021/11/11 添加按钮事件响应
         b1.setOnClickListener(view -> {
-            Intent intent = new Intent(this, UjnMusicService.class);
-            startService(intent);
+            startService(intentService);
             Log.v("Eqnoxx", "服务启动。");
 
             // TODO: 2021/11/11 添加温馨通知
@@ -58,8 +85,7 @@ public class MainActivity extends AppCompatActivity {
             Log.v("Eqnoxx", "温馨通知启动。");
         });
         b2.setOnClickListener(view -> {
-            Intent intent = new Intent(this, UjnMusicService.class);
-            stopService(intent);
+            stopService(intentService);
             Log.v("Eqnoxx", "服务停止。");
         });
     }
@@ -71,6 +97,7 @@ public class MainActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
             int level = intent.getIntExtra("level", 0);
             Log.v("Eqnoxx", "当前电量："+level);
+            battery.setText("当前电量："+level);
             if (lastLevel>=50 && level<50) {
                 Intent intent2 = new Intent(MainActivity.this, UjnMusicService.class);
                 stopService(intent2);
@@ -82,6 +109,15 @@ public class MainActivity extends AppCompatActivity {
                 Log.v("Eqnoxx", "电量恢复。");
             }
             lastLevel = level;
+        }
+    }
+    class ProgressReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            int progress = intent.getIntExtra("pro", 0);
+            System.out.println(progress);
+            seekBar.setProgress(progress);
         }
     }
 }
