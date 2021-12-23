@@ -45,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
         nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         battery = findViewById(R.id.battery);
         seekBar = findViewById(R.id.seekBar);
+
         seekBar.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -52,17 +53,17 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // TODO: 2021/12/14 注册进度广播接收器
+        // TODO: 2021/12/14 添加进度广播接收器
         IntentFilter filter = new IntentFilter();
         filter.addAction("progress");
         registerReceiver(new ProgressReceiver(), filter);
 
-        // TODO: 2021/11/11 注册Receiver
+        // TODO: 2021/11/11 添加电池Receiver
         IntentFilter intentFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         BatteryReceiver batteryReceiver = new BatteryReceiver();
         registerReceiver(batteryReceiver, intentFilter);
 
-        // TODO: 2021/12/14 注册service
+        // TODO: 2021/12/14 添加service
         Intent intentService = new Intent(this, UjnMusicService.class);
 
         // TODO: 2021/11/11 添加按钮事件响应
